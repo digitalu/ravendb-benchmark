@@ -1,0 +1,27 @@
+version: "3.3"
+
+services:
+  app:
+    build: .
+    ports:
+      - "4000:80"
+    env_file: .env
+    depends_on:
+      - ravendb
+    volumes:
+      - ./:/app
+    networks:
+      - app-network
+
+  ravendb:
+    image: ravendb/ravendb:ubuntu-latest
+    env_file: .ravenenv
+    ports:
+      - "8080:8080"
+      - "38888:38888"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

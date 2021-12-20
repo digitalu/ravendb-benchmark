@@ -1,0 +1,4 @@
+node_modules
+.git
+.gitignore
+# dist --> The server may not be powerfull enough to build the dist folder

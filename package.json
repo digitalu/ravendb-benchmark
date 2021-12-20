@@ -5,13 +5,14 @@
   "author": "El Ouahabi Nabil & Al Shoha Shady",
   "main": "src/index.js",
   "scripts": {
-    "start": "npm install --production && node ./src/index.js",
+    "start": "npm install --production && nodemon ./src/index.js",
     "docker": "docker-compose up --force-recreate --build -d && docker image prune -a -f"
   },
   "dependencies": {
     "ejs": "^2.7.4",
     "express": "^4.17.2",
-    "nodemon": "^1.9.2",
+    "fs": "^0.0.1-security",
+    "nodemon": "^1.19.4",
     "pg": "^8.7.1",
     "rethinkdb": "^2.4.2"
   },

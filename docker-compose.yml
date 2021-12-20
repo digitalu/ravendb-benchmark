@@ -10,35 +10,40 @@ services:
       - "39015:29015"
     volumes:
       - ./rethinkdb:/data
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: '0.30'
-    #       memory: 200M
+    deploy:
+      resources:
+        limits:
+          cpus: '0.80'
+          memory: 2000M
+        reservations:
+          cpus: '0.80'
+          memory: 2000M
 
-  postgres:
-    image: postgres
-    container_name: postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - ./postgres:/data
-    ports:
-      - '5432:5432'
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: '0.30'
-    #       memory: 200M)
-    # volumes:
-    #   - addressbook-db:/var/lib/postgresql/data
+  # postgres:
+  #   image: postgres
+  #   container_name: postgres
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #   volumes:
+  #     - ./postgres:/var/lib/postgresql/data
+  #   ports:
+  #     - '5432:5432'
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '0.20'
+  #         memory: 150M
+  #       reservations:
+  #         cpus: '0.20'
+  #         memory: 150M
 
   app:
     build: .
     container_name: app
     volumes:
       - ./src:/app/src
+      - ./data:/app/data
     command: npm start
     ports:
       - "33000:3000"
@@ -49,7 +54,4 @@ services:
       DB_HOST: postgres
     depends_on:
       - rethinkdb
-      - postgres
-
-# volumes:
-#   addressbook-db:
+      # - postgres

@@ -64,6 +64,7 @@ const keysProfiles = [
   'companies_brands',
   'more',
 ];
+const keysRelationships = ['user1_id', 'user2_id'];
 
 module.exports = {
   async connect() {
@@ -85,24 +86,32 @@ module.exports = {
     }
   },
 
+  async countProfiles() {
+    try {
+      const res = await r.table('profiles').count().run(connection);
+      console.log(res);
+    } catch (err) {
+      console.error(err);
+    }
+  },
+
   async insertProfiles() {
     try {
       // const file1 = await fs.readFile('../data/soc-pokec-relationships-100.txt')
-      fs.readFile('/app/data/soc-pokec-profiles-100k.txt', 'utf8', async (err, data) => {
+      fs.readFile('/app/data/soc-pokec-profiles-80k.txt', 'utf8', async (err, data) => {
         if (err) {
           console.error(err);
           return;
         }
         let lines = data.split('\n');
-        // console.log(lines);
 
-        lines = lines.slice(0, 1000);
+        lines = lines.slice(65000, 80000);
 
         const dataToInsert = [];
 
         lines.map((line) => {
           const elems = line.split('\t');
-          elems.pop()
+          elems.pop();
           const object = {};
           elems.forEach((elem, index) => {
             // console.log(elem);
@@ -124,32 +133,218 @@ module.exports = {
               return;
             }
 
-            if (elem === '') console.log('AH', index);
             object[keysProfiles[index]] = elem;
           });
 
           dataToInsert.push(object);
-
-          // const res = await r.table('profiles').insert([object]).run(connection);
-          // console.log(JSON.stringify(res, null, 2));
         });
 
-        const start = new Date()
+        const start = new Date();
 
-        for (const profile of dataToInsert) {
-          await r.table('profiles').insert([profile]).run(connection); 
-          // console.log(JSON.stringify(res, null, 2));
-        }
+        // for (const profile of dataToInsert) {
+        //   await r.table('profiles').insert([profile]).run(connection);
+        // }
 
-        // await r.table('profiles').insert(dataToInsert).run(connection); 
+        await r.table('profiles').insert(dataToInsert).run(connection);
         // console.log(JSON.stringify(res, null, 2));
 
-      
-        const end = new Date()
+        const end = new Date();
 
-        console.log("HEIN", end - start)
+        console.log('Total time: ', end - start);
       });
+    } catch (err) {
+      console.error(err);
+    }
+  },
 
+  async insertRelationShips() {
+    try {
+      // const file1 = await fs.readFile('../data/soc-pokec-relationships-100.txt')
+      fs.readFile('/app/data/soc-pokec-relationships-80k.txt', 'utf8', async (err, data) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
+        let lines = data.split('\n');
+
+        lines = lines.slice(460000, 500000); // 51 - 540 000
+
+        const dataToInsert = [];
+
+        lines.map((line) => {
+          const elems = line.split('\t');
+
+          const object = {};
+
+          elems.forEach((elem, index) => {
+            object[keysRelationships[index]] = parseInt(elem);
+          });
+
+          dataToInsert.push(object);
+        });
+
+        const start = new Date();
+
+        await r.table('relationships').insert(dataToInsert).run(connection);
+
+        const end = new Date();
+
+        console.log('Total time: ', end - start);
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  },
+
+  async dropRelationshipsTable() {
+    // const res = await r.db('test').tableDrop('relationships').run(connection)
+    // console.log(res)
+  },
+
+  async indexDB() {
+    // await r.table('profiles').indexCreate('user_id').run(connection);
+    // await r.table('profiles').indexWait('user_id').run(connection);
+
+    await r.table('relationships').indexCreate('user1_id').run(connection);
+    await r.table('relationships').indexWait('user1_id').run(connection);
+
+    await r.table('relationships').indexCreate('user2_id').run(connection);
+    await r.table('relationships').indexWait('user2_id').run(connection);
+  },
+
+  async fetchRandomProfilesWithoutIndex() {
+    try {
+      let it = 0;
+
+      const promises = [];
+      while (it < 50000) {
+        it += 1;
+        const randomId = Math.floor(Math.random() * 80_000);
+
+        promises.push(
+          new Promise(async (resolve) => {
+            const cursor = await r.table('profiles').filter({ user_id: randomId }).limit(1).run(connection);
+
+            const res = cursor.toArray();
+
+            resolve(res);
+          })
+        );
+      }
+      const start = new Date();
+
+      const res = await Promise.all(promises);
+
+      const end = new Date();
+      console.log('Total time: ', end - start);
+
+      // console.log(res);
+    } catch (err) {
+      console.error(err);
+    }
+  },
+
+  async fetchRandomProfilesWithIndex() {
+    try {
+      let it = 0;
+
+      const promises = [];
+      while (it < 50000) {
+        it += 1;
+        const randomId = Math.floor(Math.random() * 80_000);
+        // console.log(randomId)
+
+        promises.push(
+          new Promise(async (resolve) => {
+            const cursor = await r.table('profiles').getAll(randomId, { index: 'user_id' }).run(connection);
+
+            const res = cursor.toArray();
+
+            resolve(res);
+          })
+        );
+      }
+      const start = new Date();
+
+      const res = await Promise.all(promises);
+
+      const end = new Date();
+      console.log('Total time: ', end - start);
+
+      // console.log(res);
+    } catch (err) {
+      console.error(err);
+    }
+  },
+
+  async countProfilesWithAge(age) {
+    try {
+      const start = new Date();
+      const nbr = await r
+        .table('profiles')('AGE')
+        .count(function (AGE) {
+          return AGE.eq(age);
+        })
+        .run(connection);
+
+      const end = new Date();
+      console.log('Total time: ', end - start);
+
+      console.log(nbr);
+    } catch (err) {
+      console.error(err);
+    }
+  },
+
+  async searchNeighboors() {
+    try {
+      const start = new Date();
+
+      // const randomId = Math.floor(Math.random() * 30_000);
+      const randomId = 1271;
+      console.log({ randomId });
+      const cursor = await r
+        .table('profiles')
+        .getAll(randomId, { index: 'user_id' })
+        .merge(function (profile) {
+          return {
+            connexions: r
+              .expr(
+                r
+                  .table('relationships')
+                  .getAll(profile('user_id'), { index: 'user1_id' })
+                  .merge(function (profile) {
+                    return {
+                      connexions: r
+                        .expr(r.table('relationships').getAll(profile('user2_id'), { index: 'user1_id' }))
+                        .union(r.table('relationships').getAll(profile('user2_id'), { index: 'user2_id' }))
+                        .coerceTo('array'),
+                    };
+                  })
+              )
+              .union(
+                r
+                  .table('relationships')
+                  .getAll(profile('user_id'), { index: 'user2_id' })
+                  .merge(function (profile) {
+                    return {
+                      connexions: r
+                        .expr(r.table('relationships').getAll(profile('user1_id'), { index: 'user1_id' }))
+                        .union(r.table('relationships').getAll(profile('user1_id'), { index: 'user2_id' }))
+                        .coerceTo('array'),
+                    };
+                  })
+              )
+              .coerceTo('array'),
+          };
+        })
+        .run(connection);
+      const res = await cursor.toArray();
+      //console.log(res);
+      console.log(res[0].connexions);
+
+      const end = new Date();
+      console.log('Total time: ', end - start);
     } catch (err) {
       console.error(err);
     }

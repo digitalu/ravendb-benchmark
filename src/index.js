@@ -6,19 +6,35 @@ const launchRethinkDB = async () => {
 
   // await rethinkdbHandler.createTables();
 
-  await rethinkdbHandler.insertProfiles();
+  // await rethinkdbHandler.insertProfiles();
+  //await rethinkdbHandler.insertRelationShips();
+
+  // await rethinkdbHandler.countProfiles();
+
+  //  await rethinkdbHandler.indexDB()
+
+  // await rethinkdbHandler.fetchRandomProfilesWithIndex()
+
+  // var age = 0
+  // while (age  < 80){
+  //   console.log('age ', age)
+  //   await rethinkdbHandler.countProfilesWithAge(age)
+  //   age++
+  // }
+
+  await rethinkdbHandler.searchNeighboors()
+
+  // await rethinkdbHandler.dropRelationshipsTable()
 };
 
 const launchPostgre = async () => {
   await postgreHandler.connect();
-  console.log(1);
-  await postgreHandler.createTables();
-  console.log(2);
-  
 
-  // await postgreHandler.insertProfiles()
+  // await postgreHandler.createTables();
 
-  // await postgreHandler.getProfiles()
+  await postgreHandler.insertProfiles();
+
+  //await postgreHandler.getProfiles()
 };
 
 launchRethinkDB();
